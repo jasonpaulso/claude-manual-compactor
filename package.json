@@ -1,14 +1,35 @@
 {
   "name": "claude-manual-compactor",
   "version": "1.0.0",
-  "description": "A script to split and compact files for Claude Code sessions",
+  "description": "A CLI tool for compacting text files by splitting and summarizing with Claude",
   "main": "claude-manual-compact",
+  "bin": {
+    "claude-manual-compact": "./claude-manual-compact"
+  },
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "start": "./claude-manual-compact"
   },
+  "keywords": [
+    "claude",
+    "cli",
+    "text-compaction",
+    "token-reduction",
+    "llm",
+    "ai"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "preferGlobal": true,
   "dependencies": {
     "commander": "^11.1.0"
   },

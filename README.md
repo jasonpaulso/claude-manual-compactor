@@ -1,41 +1,48 @@
 # claude-manual-compact
 
-A CLI tool for compacting text files by splitting them and summarizing the first part with Claude, designed to reduce token usage for LLM chat sessions.
+A CLI tool for compacting text files by splitting them and summarizing the first half with Claude, and keep the second half untouched. 
 
-## Overview
-
-This tool helps manage context window limitations by:
-1. **Splitting** a text file at a configurable percentage with optional overlap
-2. **Summarizing** the first part using Claude CLI to reduce token count
-3. **Combining** the summary with the second part for a compacted result
-
-Perfect for maintaining conversation context while staying within token limits.
-
-## Installation
-
-```bash
-npm install
-```
+It's designed to reduce token usage for LLM chat sessions while maintaining context fidelity for the recent conversation.
 
 ## Usage
 
-### Basic Usage
+In a Claude Code interactive session, export the current chat by `/export` and choose `Save to file`.
 
+![export-ui.png](doc/export-ui.png)
+
+Run the script with the path to the exported file:
 ```bash
 ./claude-manual-compact <file>
 ```
+
+This will product a file in the current directory with the name `claude-compactor-<yyyy-mm-dd-hh-mm-ss>-<4 letter random string>.txt`.
+
+To load the chat session with the compacted content, run:
+
+```bash
+cat <output-file> | claude
+```
+
 
 ### With Options
 
 ```bash
 # Split at 60% with 5 lines overlap
-./claude-manual-compact myfile.txt --split 60 --overlap 5
+./claude-manual-compact my_chat_session.txt --split 60 --overlap 5
 
 # Use specific Claude model
-./claude-manual-compact myfile.txt --model claude-3-opus-20240229
+./claude-manual-compact my_chat_session.txt --model claude-opus-4-20250514
 
 # Custom output filename
-./claude-manual-compact myfile.txt --output-file my-summary.txt
+./claude-manual-compact my_chat_session.txt --output-file my-compacted_chat_session.txt
+```
+
+## Development
+
+### Installation
+
+```bash
+npm install
 ```
 
 ### CLI Options
