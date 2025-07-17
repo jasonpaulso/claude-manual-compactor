@@ -1,0 +1,123 @@
+#!/usr/bin/env node
+
+const { Command } = require('commander');
+const fs = require('fs');
+const path = require('path');
+const { spawn } = require('child_process');
+
+// Import functions from src/ modules
+const { splitFile } = require('./src/file-splitting');
+const { summarizeWithClaude } = require('./src/claude-integration');
+const { validateSplit, validateOverlap, validateFile, validateOutputFile } = require('./src/parameter-validation');
+
+// Create wrapper for optional model validation
+function validateModel(model) {
+  if (model && typeof model !== 'string') {
+    throw new Error('Model must be a string');
+  }
+  return model ? model.trim() : undefined;
+}
+
+const program = new Command();
+
+// Functions are now imported from src/ modules
+
+// Output generation
+function generateOutputFilename() {
+  const now = new Date();
+  const timestamp = now.toISOString()
+    .replace(/[:.]/g, '-')
+    .replace('T', '-')
+    .slice(0, 19);
+  
+  const randomString = Math.random().toString(36).substring(2, 6).toUpperCase();
+  
+  return `claude-compactor-${timestamp}-${randomString}.txt`;
+}
+
+function writeOutputFile(content, filename) {
+  try {
+    fs.writeFileSync(filename, content, 'utf8');
+    return filename;
+  } catch (error) {
+    throw new Error(`Failed to write output file: ${error.message}`);
+  }
+}
+
+// Main command implementation
+async function compactFile(inputFile, options) {
+  try {
+    console.log(`📁 Reading file: ${inputFile}`);
+    
+    // Read and validate input file
+    const content = fs.readFileSync(inputFile, 'utf8');
+    const lines = content.split('\n');
+    
+    console.log(`📊 File has ${lines.length} lines`);
+    console.log(`⚙️  Parameters: split=${options.split}%, overlap=${options.overlap} lines${options.model ? `, model=${options.model}` : ''}`);
+    
+    // Split the file
+    const { part1, part2 } = splitFile(lines, options.split, options.overlap);
+    
+    const splitIndex = Math.floor((lines.length * options.split) / 100);
+    const actualOverlap = Math.min(options.overlap, splitIndex, lines.length - splitIndex);
+    const part1End = Math.min(splitIndex + actualOverlap, lines.length);
+    const part2Start = Math.max(0, part1End - actualOverlap);
+    
+    console.log(`✂️  Split: Part 1 (lines 1-${part1End}), Part 2 (lines ${part2Start + 1}-${lines.length})`);
+    console.log(`🔄 Overlap: ${actualOverlap} lines (${part2Start + 1}-${part1End})`);
+    
+    // Summarize part 1 with Claude
+    console.log('🤖 Claude is summarizing part 1:');
+    console.log(''); // Empty line for visual separation
+    const part1Content = part1.join('\n');
+    const summary = await summarizeWithClaude(part1Content, options.model);
+    
+    console.log(''); // Empty line after streaming
+    console.log('✅ Summary completed');
+    
+    // Combine summary with part 2
+    const part2Content = part2.join('\n');
+    const finalContent = `${summary}\n
+-- End of conversation summary --
+-- Raw conversation starts below --    
+\n${part2Content}`;
+
+    // Write output file
+    const outputFilename = options.outputFile || generateOutputFilename();
+    const outputPath = writeOutputFile(finalContent, outputFilename);
+    
+    console.log(`💾 Output written to: ${outputPath}`);
+    console.log('');
+    console.log('🚀 To start a new Claude Code session with the compacted content:');
+    console.log(`   cat ${outputPath} | claude`);
+    
+  } catch (error) {
+    console.error('❌ Error:', error.message);
+    process.exit(1);
+  }
+}
+
+// CLI setup
+program
+  .name('claude-manual-compact')
+  .description('Compact text files for Claude Code by splitting and summarizing')
+  .version('1.0.0');
+
+program
+  .argument('<file>', 'Input file to compact')
+  .option('-s, --split <percentage>', 'Split percentage (1-100)', validateSplit, 50)
+  .option('-o, --overlap <lines>', 'Overlap lines (0-99999)', validateOverlap, 10)
+  .option('-m, --model <model>', 'Claude model for summarization', validateModel)
+  .option('--output-file <filename>', 'Output filename', validateOutputFile)
+  .action(async (file, options) => {
+    try {
+      validateFile(file);
+      await compactFile(file, options);
+    } catch (error) {
+      console.error('❌ Error:', error.message);
+      process.exit(1);
+    }
+  });
+
+program.parse();
