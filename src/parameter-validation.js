@@ -39,34 +39,13 @@ function validateFile(filepath) {
 }
 
 function validateModel(model) {
-  if (model === null || model === undefined || model === '') {
-    throw new Error('Model cannot be empty');
-  }
-  
-  if (typeof model !== 'string') {
+  if (model && typeof model !== 'string') {
     throw new Error('Model must be a string');
   }
-  
-  const trimmed = model.trim();
-  if (!trimmed) {
-    throw new Error('Model cannot be empty');
+  if (!model || !model.trim()) {
+    return undefined;
   }
-  
-  // Basic validation for Claude model names
-  const validModels = [
-    'claude-3-haiku-20240307',
-    'claude-3-sonnet-20240229',
-    'claude-3-opus-20240229',
-    'haiku',
-    'sonnet',
-    'opus'
-  ];
-  
-  if (!validModels.includes(trimmed)) {
-    throw new Error('Invalid model name');
-  }
-  
-  return trimmed;
+  return model.trim();
 }
 
 function validateOutputFile(filename) {

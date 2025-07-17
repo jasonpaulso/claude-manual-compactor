@@ -89,7 +89,9 @@ async function compactFile(inputFile, options) {
     
     console.log(`💾 Output written to: ${outputPath}`);
     console.log('');
-    console.log('🚀 To start a new Claude Code session with the compacted content:');
+    console.log('🚀 To start a new Claude Code session with the compacted content');
+    console.log('🚀 Run the following command:');
+    console.log('');
     console.log(`   cat ${outputPath} | claude`);
     
   } catch (error) {
@@ -118,7 +120,11 @@ program
   .argument('<file>', 'Input file to compact')
   .option('-s, --split <percentage>', 'Split percentage (1-100)', validateSplit, 50)
   .option('-o, --overlap <lines>', 'Overlap lines (0-99999)', validateOverlap, 10)
-  .option('-m, --model <model>', 'Claude model for summarization', validateModel)
+  .option(
+    '-m, --model <model>', 
+    'Claude model for summarization. See https://docs.anthropic.com/en/docs/about-claude/models/overview', 
+    validateModel
+  )
   .option('--output-file <filename>', 'Output filename', validateOutputFile)
   .action(async (file, options) => {
     try {

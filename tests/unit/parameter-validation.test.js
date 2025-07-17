@@ -123,21 +123,24 @@ describe('Parameter Validation Tests', () => {
       });
     });
 
-    describe('invalid model names', () => {
-      test('should reject invalid model name', () => {
-        expect(() => validateModel('invalid-model')).toThrow('Invalid model name');
-        expect(() => validateModel('gpt-4')).toThrow('Invalid model name');
+    describe('model parameter handling', () => {
+      test('should accept any valid string model name', () => {
+        expect(validateModel('invalid-model')).toBe('invalid-model');
+        expect(validateModel('gpt-4')).toBe('gpt-4');
+        expect(validateModel('claude-4-super-new')).toBe('claude-4-super-new');
       });
 
-      test('should reject empty model parameter', () => {
-        expect(() => validateModel('')).toThrow('Model cannot be empty');
-        expect(() => validateModel('   ')).toThrow('Model cannot be empty');
+      test('should accept empty model parameters as optional', () => {
+        expect(validateModel('')).toBeUndefined();
+        expect(validateModel('   ')).toBeUndefined();
+        expect(validateModel(null)).toBeUndefined();
+        expect(validateModel(undefined)).toBeUndefined();
       });
 
       test('should reject non-string model parameter', () => {
-        expect(() => validateModel(null)).toThrow('Model cannot be empty');
-        expect(() => validateModel(undefined)).toThrow('Model cannot be empty');
         expect(() => validateModel(123)).toThrow('Model must be a string');
+        expect(() => validateModel({})).toThrow('Model must be a string');
+        expect(() => validateModel([])).toThrow('Model must be a string');
       });
     });
   });
