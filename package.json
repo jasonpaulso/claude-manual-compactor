@@ -23,7 +23,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/thecodecentral/claude-manual-compactor"
+    "url": "git+https://github.com/thecodecentral/claude-manual-compactor.git"
+  },
+  "homepage": "https://github.com/thecodecentral/claude-manual-compactor#readme",
+  "bugs": {
+    "url": "https://github.com/thecodecentral/claude-manual-compactor/issues"
   },
   "engines": {
     "node": ">=16.0.0"
