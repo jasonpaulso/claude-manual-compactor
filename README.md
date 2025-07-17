@@ -12,7 +12,7 @@ In a Claude Code interactive session, export the current chat by `/export` and c
 
 Run the script with the path to the exported file:
 ```bash
-./claude-manual-compact <file>
+npx https://github.com/thecodecentral/claude-manual-compact <path/chat-session-export.txt>
 ```
 
 This will product a file in the current directory with the name `claude-compactor-<yyyy-mm-dd-hh-mm-ss>-<4 letter random string>.txt`.
