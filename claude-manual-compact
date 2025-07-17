@@ -68,12 +68,15 @@ async function compactFile(inputFile, options) {
     console.log(`🔄 Overlap: ${actualOverlap} lines (${part2Start + 1}-${part1End})`);
     
     // Summarize part 1 with Claude
-    console.log('🤖 Claude is summarizing part 1:');
+    console.log('🤖 Claude is summarizing part 1...');
+    console.log('📝 Streaming response:');
     console.log(''); // Empty line for visual separation
+    
     const part1Content = part1.join('\n');
     const summary = await summarizeWithClaude(part1Content, options.model);
     
     console.log(''); // Empty line after streaming
+    console.log('─'.repeat(50)); // Visual separator
     console.log('✅ Summary completed');
     
     // Combine summary with part 2

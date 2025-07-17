@@ -30,6 +30,7 @@ function summarizeWithClaude(content, model) {
     let fullResponse = '';
     let stderr = '';
     let buffer = '';
+    let firstChunkReceived = false;
     
     claudeProcess.stdout.on('data', (data) => {
       const chunk = data.toString();
@@ -46,9 +47,16 @@ function summarizeWithClaude(content, model) {
             
             // Handle different message types from Claude CLI stream-json
             if (parsed.type === 'assistant' && parsed.message?.content) {
+              // Show a connection indicator on first response
+              if (!firstChunkReceived) {
+                process.stdout.write('🔗 Connected to Claude, generating response...\n\n');
+                firstChunkReceived = true;
+              }
+              
               // Extract text from assistant message and show to user for progress
               for (const content of parsed.message.content) {
                 if (content.type === 'text' && content.text) {
+                  // Ensure immediate output by flushing stdout
                   process.stdout.write(content.text);
                   // Don't accumulate streaming content - only use final result
                 }
@@ -56,6 +64,13 @@ function summarizeWithClaude(content, model) {
             } else if (parsed.type === 'result' && parsed.result) {
               // Final result - this is what we use as the actual summary
               fullResponse = parsed.result;
+            } else if (parsed.type === 'system') {
+                  if (parsed.model) {
+                    process.stdout.write(`Process input using ${parsed.model}...`);
+                  } else {
+                    console.log(`Unknown system message detected.`);
+                  }
+              return;
             }
           } catch (err) {
             // With --verbose, some lines might not be JSON (debug info)
