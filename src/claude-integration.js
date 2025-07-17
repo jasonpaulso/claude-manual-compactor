@@ -66,7 +66,7 @@ function summarizeWithClaude(content, model) {
               fullResponse = parsed.result;
             } else if (parsed.type === 'system') {
                   if (parsed.model) {
-                    process.stdout.write(`Process input using ${parsed.model}...`);
+                    process.stdout.write(`Process input using ${parsed.model}...\n\n`);
                   } else {
                     console.log(`Unknown system message detected.`);
                   }
