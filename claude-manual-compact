@@ -105,18 +105,18 @@ async function compactFile(inputFile, options) {
 
 // CLI setup
 program
-  .name('claude-manual-compact')
+  .name('claude-manual-compactor')
   .description('Compact text files for Claude Code by splitting and summarizing')
   .version('1.0.0')
   .addHelpText('after', `
 Examples:
-  claude-manual-compact my-chat.txt
-  claude-manual-compact conversation.txt --split 60 --overlap 5
-  claude-manual-compact session.txt --model claude-3-opus-20240229
+  claude-manual-compactor my-chat.txt
+  claude-manual-compactor conversation.txt --split 60 --overlap 5
+  claude-manual-compactor session.txt --model claude-3-opus-20240229
 
 Workflow:
   1. In Claude Code, export your chat with /export → Save to file
-  2. Run: claude-manual-compact exported-file.txt
+  2. Run: claude-manual-compactor exported-file.txt
   3. Load compacted file: cat output-file.txt | claude`);
 
 program
@@ -144,8 +144,8 @@ program.exitOverride((err) => {
   if (err.code === 'commander.missingArgument') {
     console.error('❌ Error: Missing required file argument\n');
     console.log('💡 Quick start:');
-    console.log('   claude-manual-compact my-exported-chat.txt\n');
-    console.log('📖 For more help: claude-manual-compact --help');
+    console.log('   claude-manual-compactor my-exported-chat.txt\n');
+    console.log('📖 For more help: claude-manual-compactor --help');
     process.exit(1);
   }
   if (err.code === 'commander.helpDisplayed') {

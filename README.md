@@ -1,4 +1,4 @@
-# claude-manual-compact
+# claude-manual-compactor
 
 A CLI tool for compacting text files by splitting them and summarizing the first half with Claude, and keep the second half untouched. 
 
@@ -12,7 +12,7 @@ In a Claude Code interactive session, export the current chat by `/export` and c
 
 Run the script with the path to the exported file:
 ```bash
-npx https://github.com/thecodecentral/claude-manual-compact <path/chat-session-export.txt>
+npx @codecentre/claude-manual-compactor <path/chat-session-export.txt>
 ```
 
 This will product a file in the current directory with the name `claude-compactor-<yyyy-mm-dd-hh-mm-ss>-<4 letter random string>.txt`.
@@ -21,20 +21,6 @@ To load the chat session with the compacted content, run:
 
 ```bash
 cat <output-file> | claude
-```
-
-
-### With Options
-
-```bash
-# Split at 60% with 5 lines overlap
-./claude-manual-compact my_chat_session.txt --split 60 --overlap 5
-
-# Use specific Claude model
-./claude-manual-compact my_chat_session.txt --model claude-opus-4-20250514
-
-# Custom output filename
-./claude-manual-compact my_chat_session.txt --output-file my-compacted_chat_session.txt
 ```
 
 ## Development
@@ -93,7 +79,7 @@ For a 100-line file with 50% split and 10 lines overlap:
 
 ```
 claude-manual-compactor/
-├── claude-manual-compact     # Main executable script
+├── claude-manual-compactor    # Main executable script
 ├── src/                      # Modular source code
 │   ├── claude-integration.js # Claude CLI interaction & streaming
 │   ├── file-splitting.js     # File splitting with overlap logic  
@@ -147,6 +133,68 @@ The tool provides clear error messages for:
 - Invalid parameters (split %, overlap count)
 - Claude CLI errors or unavailability
 - File system permission issues
+
+## Version Management
+
+### Bumping Versions
+
+Use npm's built-in version commands to bump versions automatically:
+
+```bash
+npm version patch   # x.y.z → x.y.(z+1)
+npm version minor   # x.y.z → x.(y+1).0
+npm version major   # x.y.z → (x+1).0.0
+```
+
+### 🧪 Example
+
+If your current version is `1.2.3`:
+
+- `npm version patch` → `1.2.4`
+- `npm version minor` → `1.3.0`
+- `npm version major` → `2.0.0`
+
+### 🧪 Pre-releases
+
+Create alpha/beta releases:
+
+```bash
+npm version prerelease --preid=alpha
+# e.g. 1.0.0 → 1.0.1-alpha.0
+```
+
+Next time:
+
+```bash
+npm version prerelease --preid=alpha
+# 1.0.1-alpha.0 → 1.0.1-alpha.1
+```
+
+You can also start with a specific pre-release version:
+
+```bash
+npm version 1.0.0-alpha.0
+```
+
+### ⚠️ What it does:
+
+- Updates the version in `package.json` (and `package-lock.json` if present)
+- Creates a Git commit like `v1.2.4`
+- Creates a Git tag `v1.2.4`
+
+If you don't want Git stuff, use:
+
+```bash
+npm version patch --no-git-tag-version
+```
+
+### 💡 Pro tip: Combine with publishing
+
+```bash
+npm version patch
+npm publish --tag alpha
+git push --follow-tags
+```
 
 ## License
 

@@ -1,0 +1,50 @@
+1. The president jumps over a robot.
+2. The cat eats a plan.
+3. A dog eats a sandwich.
+4. An engineer writes a robot.
+5. A programmer writes a robot.
+6. A dog solves a solution.
+7. My neighbor writes a puzzle.
+8. My neighbor solves code.
+9. The teacher discovers a plan.
+10. A programmer explores a robot.
+11. A dog builds a robot.
+12. A programmer destroys a sandwich.
+13. The teacher destroys a solution.
+14. The artist creates a puzzle.
+15. The cat jumps over a plan.
+16. The president creates a secret.
+17. An engineer explores a fence.
+18. An engineer eats a painting.
+19. A programmer builds a secret.
+20. The president eats a secret.
+21. A dog writes a sandwich.
+22. The teacher creates a secret.
+23. An alien solves a secret.
+24. The artist discovers a spaceship.
+25. An engineer creates a fence.
+26. The cat eats a sandwich.
+27. A programmer jumps over code.
+28. The president discovers a robot.
+29. An engineer jumps over a fence.
+30. The artist destroys a painting.
+31. An alien solves a plan.
+32. The artist discovers code.
+33. An alien designs a painting.
+34. A robot writes a painting.
+35. The president solves a painting.
+36. An alien explores a secret.
+37. The teacher explores a painting.
+38. A robot jumps over a fence.
+39. The artist discovers a fence.
+40. An alien designs a robot.
+41. The artist jumps over a solution.
+42. A dog creates a painting.
+43. A robot solves code.
+44. The president builds a robot.
+45. The artist designs a puzzle.
+46. An engineer eats a secret.
+47. My neighbor designs a plan.
+48. A programmer jumps over a fence.
+49. The president jumps over a robot.
+50. A programmer builds code.

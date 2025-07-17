@@ -2,7 +2,7 @@ Please help me write a script that can be run locally.
 
 This script should be in node.js as Claude Code is installed via npm, so it's already avalalbe in the user's environment.
 
-Call this script `claude-manual-compact`.
+Call this script `claude-manual-compactor`.
 
 It takes mandary param <path/filename.txt>
 
