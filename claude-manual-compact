@@ -1,19 +1,25 @@
 #!/usr/bin/env node
 
-const { Command } = require('commander');
-const fs = require('fs');
-const path = require('path');
-const { spawn } = require('child_process');
+const { Command } = require("commander");
+const fs = require("fs");
+const path = require("path");
+const { spawn } = require("child_process");
 
 // Import functions from src/ modules
-const { splitFile } = require('./src/file-splitting');
-const { summarizeWithClaude } = require('./src/claude-integration');
-const { validateSplit, validateOverlap, validateFile, validateOutputFile } = require('./src/parameter-validation');
+const { splitFile } = require("./src/file-splitting");
+const { summarizeWithClaude } = require("./src/claude-integration");
+const { summarizeWithOpenAI } = require("./src/openai-integration");
+const {
+  validateSplit,
+  validateOverlap,
+  validateFile,
+  validateOutputFile,
+} = require("./src/parameter-validation");
 
 // Create wrapper for optional model validation
 function validateModel(model) {
-  if (model && typeof model !== 'string') {
-    throw new Error('Model must be a string');
+  if (model && typeof model !== "string") {
+    throw new Error("Model must be a string");
   }
   return model ? model.trim() : undefined;
 }
@@ -25,19 +31,20 @@ const program = new Command();
 // Output generation
 function generateOutputFilename() {
   const now = new Date();
-  const timestamp = now.toISOString()
-    .replace(/[:.]/g, '-')
-    .replace('T', '-')
+  const timestamp = now
+    .toISOString()
+    .replace(/[:.]/g, "-")
+    .replace("T", "-")
     .slice(0, 19);
-  
+
   const randomString = Math.random().toString(36).substring(2, 6).toUpperCase();
-  
+
   return `claude-compactor-${timestamp}-${randomString}.txt`;
 }
 
 function writeOutputFile(content, filename) {
   try {
-    fs.writeFileSync(filename, content, 'utf8');
+    fs.writeFileSync(filename, content, "utf8");
     return filename;
   } catch (error) {
     throw new Error(`Failed to write output file: ${error.message}`);
@@ -48,40 +55,83 @@ function writeOutputFile(content, filename) {
 async function compactFile(inputFile, options) {
   try {
     console.log(`📁 Reading file: ${inputFile}`);
-    
+
     // Read and validate input file
-    const content = fs.readFileSync(inputFile, 'utf8');
-    const lines = content.split('\n');
-    
+    const content = fs.readFileSync(inputFile, "utf8");
+    const lines = content.split("\n");
+
     console.log(`📊 File has ${lines.length} lines`);
-    console.log(`⚙️  Parameters: split=${options.split}%, overlap=${options.overlap} lines${options.model ? `, model=${options.model}` : ''}`);
-    
+    const llmType = options.openai ? "OpenAI" : "Claude";
+    console.log(
+      `⚙️  Parameters: split=${options.split}%, overlap=${
+        options.overlap
+      } lines, LLM=${llmType}${options.model ? `, model=${options.model}` : ""}`
+    );
+
     // Split the file
     const { part1, part2 } = splitFile(lines, options.split, options.overlap);
-    
+
     const splitIndex = Math.floor((lines.length * options.split) / 100);
-    const actualOverlap = Math.min(options.overlap, splitIndex, lines.length - splitIndex);
+    const actualOverlap = Math.min(
+      options.overlap,
+      splitIndex,
+      lines.length - splitIndex
+    );
     const part1End = Math.min(splitIndex + actualOverlap, lines.length);
     const part2Start = Math.max(0, part1End - actualOverlap);
-    
-    console.log(`✂️  Split: Part 1 (lines 1-${part1End}), Part 2 (lines ${part2Start + 1}-${lines.length})`);
-    console.log(`🔄 Overlap: ${actualOverlap} lines (${part2Start + 1}-${part1End})`);
-    
-    // Summarize part 1 with Claude
-    console.log('🤖 Claude is summarizing part 1...');
-    console.log('📝 Streaming response:');
-    console.log(''); // Empty line for visual separation
-    
-    const part1Content = part1.join('\n');
-    const summary = await summarizeWithClaude(part1Content, options.model);
-    
-    console.log(''); // Empty line after streaming
-    console.log('─'.repeat(50)); // Visual separator
-    console.log('✅ Summary completed');
-    
-    // Combine summary with part 2
-    const part2Content = part2.join('\n');
-    const finalContent = `${summary}\n
+
+    console.log(
+      `✂️  Split: Part 1 (lines 1-${part1End}), Part 2 (lines ${
+        part2Start + 1
+      }-${lines.length})`
+    );
+    console.log(
+      `🔄 Overlap: ${actualOverlap} lines (${part2Start + 1}-${part1End})`
+    );
+
+    // Summarize part 1 with chosen LLM
+    const part1Content = part1.join("\n");
+    let summary;
+
+    if (options.openai) {
+      const openaiModel = options.model || 'gpt-4o-mini';
+      console.log(`🤖 OpenAI ${openaiModel} is summarizing part 1...`);
+      console.log("📝 Streaming response:");
+      console.log(""); // Empty line for visual separation
+      summary = await summarizeWithOpenAI(part1Content, options.model);
+    } else {
+      const claudeModel = options.model || 'default';
+      console.log(`🤖 Claude ${claudeModel} is summarizing part 1...`);
+      console.log("📝 Streaming response:");
+      console.log(""); // Empty line for visual separation
+      summary = await summarizeWithClaude(part1Content, options.model);
+    }
+
+    console.log(""); // Empty line after streaming
+    console.log("─".repeat(50)); // Visual separator
+    console.log("✅ Summary completed");
+
+    // Generate frontmatter
+    const now = new Date();
+    const frontmatter = `---
+# Claude Manual Compactor Metadata
+date_processed: ${now.toISOString()}
+input_file: ${path.resolve(inputFile)}
+input_filename: ${path.basename(inputFile)}
+total_lines: ${lines.length}
+split_percentage: ${options.split}%
+overlap_lines: ${actualOverlap}
+part1_lines: ${part1End}
+part2_lines: ${lines.length - part2Start}
+llm_provider: ${llmType}
+model: ${options.model || (options.openai ? 'gpt-4o-mini' : 'default')}
+---
+
+`;
+
+    // Combine frontmatter, summary with part 2
+    const part2Content = part2.join("\n");
+    const finalContent = `${frontmatter}${summary}\n
 -- End of conversation summary --
 -- Raw conversation starts below --    
 \n${part2Content}`;
@@ -89,66 +139,84 @@ async function compactFile(inputFile, options) {
     // Write output file
     const outputFilename = options.outputFile || generateOutputFilename();
     const outputPath = writeOutputFile(finalContent, outputFilename);
-    
+
     console.log(`💾 Output written to: ${outputPath}`);
-    console.log('');
-    console.log('🚀 To start a new Claude Code session with the compacted content');
-    console.log('🚀 Run the following command:');
-    console.log('');
+    console.log("");
+    console.log(
+      "🚀 To start a new Claude Code session with the compacted content"
+    );
+    console.log("🚀 Run the following command:");
+    console.log("");
     console.log(`   cat ${outputPath} | claude`);
-    
   } catch (error) {
-    console.error('❌ Error:', error.message);
+    console.error("❌ Error:", error.message);
     process.exit(1);
   }
 }
 
 // CLI setup
 program
-  .name('claude-manual-compactor')
-  .description('Compact text files for Claude Code by splitting and summarizing')
-  .version('1.0.0')
-  .addHelpText('after', `
+  .name("claude-manual-compactor")
+  .description(
+    "Compact text files for Claude Code by splitting and summarizing"
+  )
+  .version("1.0.0")
+  .addHelpText(
+    "after",
+    `
 Examples:
   claude-manual-compactor my-chat.txt
   claude-manual-compactor conversation.txt --split 60 --overlap 5
   claude-manual-compactor session.txt --model claude-3-opus-20240229
+  claude-manual-compactor chat.txt --openai --model gpt-4o-mini
 
 Workflow:
   1. In Claude Code, export your chat with /export → Save to file
   2. Run: claude-manual-compactor exported-file.txt
-  3. Load compacted file: cat output-file.txt | claude`);
+  3. Load compacted file: cat output-file.txt | claude`
+  );
 
 program
-  .argument('<file>', 'Input file to compact')
-  .option('-s, --split <percentage>', 'Split percentage (1-100)', validateSplit, 50)
-  .option('-o, --overlap <lines>', 'Overlap lines (0-99999)', validateOverlap, 10)
+  .argument("<file>", "Input file to compact")
   .option(
-    '-m, --model <model>', 
-    'Claude model for summarization. See https://docs.anthropic.com/en/docs/about-claude/models/overview', 
+    "-s, --split <percentage>",
+    "Split percentage (1-100)",
+    validateSplit,
+    50
+  )
+  .option(
+    "-o, --overlap <lines>",
+    "Overlap lines (0-99999)",
+    validateOverlap,
+    10
+  )
+  .option(
+    "-m, --model <model>",
+    "Model for summarization (Claude or OpenAI)",
     validateModel
   )
-  .option('--output-file <filename>', 'Output filename', validateOutputFile)
+  .option("--output-file <filename>", "Output filename", validateOutputFile)
+  .option("--openai", "Use OpenAI instead of Claude for summarization")
   .action(async (file, options) => {
     try {
       validateFile(file);
       await compactFile(file, options);
     } catch (error) {
-      console.error('❌ Error:', error.message);
+      console.error("❌ Error:", error.message);
       process.exit(1);
     }
   });
 
 // Override the default error handling to show examples
 program.exitOverride((err) => {
-  if (err.code === 'commander.missingArgument') {
-    console.error('❌ Error: Missing required file argument\n');
-    console.log('💡 Quick start:');
-    console.log('   claude-manual-compactor my-exported-chat.txt\n');
-    console.log('📖 For more help: claude-manual-compactor --help');
+  if (err.code === "commander.missingArgument") {
+    console.error("❌ Error: Missing required file argument\n");
+    console.log("💡 Quick start:");
+    console.log("   claude-manual-compactor my-exported-chat.txt\n");
+    console.log("📖 For more help: claude-manual-compactor --help");
     process.exit(1);
   }
-  if (err.code === 'commander.helpDisplayed') {
+  if (err.code === "commander.helpDisplayed") {
     process.exit(0);
   }
   throw err;

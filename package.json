@@ -34,9 +34,13 @@
   },
   "preferGlobal": true,
   "dependencies": {
-    "commander": "^11.1.0"
+    "commander": "^11.1.0",
+    "openai": "^5.10.1"
   },
   "devDependencies": {
     "jest": "^30.0.4"
+  },
+  "volta": {
+    "node": "22.17.1"
   }
 }
